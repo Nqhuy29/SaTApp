@@ -1,50 +1,46 @@
-# Welcome to your Expo app 👋
+# 🎯 SaTApp - Hệ thống Điểm danh Sinh viên qua QR Code
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**SaTApp** là ứng dụng di động dành cho sinh viên, giúp việc điểm danh trở nên nhanh chóng, chính xác và chống gian lận hiệu quả bằng cách kết hợp mã QR động và xác thực vị trí GPS.
 
-## Get started
+---
 
-1. Install dependencies
+## 📱 Thành viên thực hiện
+
+- **Nguyễn Quang Huy** (Nqhuy29)
+- **Lê Kien** (kienNB2005)
+
+## 🛠 Công nghệ sử dụng
+
+- **Frontend:** React Native (Expo Router)
+- **Ngôn ngữ:** TypeScript
+- **Backend:** Java Spring Boot (đang phát triển)
+- **Database:** MySQL
+- **Thư viện chính:** - `expo-router`: Điều hướng file-based.
+  - `expo-barcode-scanner`: Quét mã QR.
+  - `expo-location`: Xác thực vị trí GPS.
+  - `lucide-react-native`: Hệ thống icon hiện đại.
+
+## 📂 Cấu trúc dự án
+
+- `app/`: Các màn hình chính (Login, Home, Scan, Schedule...).
+- `components/`: Các thành phần UI dùng chung.
+- `src/api/`: Cấu hình gọi API đến Spring Boot.
+- `src/services/`: Logic xử lý GPS và kiểm tra mã QR.
+- `src/utils/`: Các hàm bổ trợ (định dạng ngày tháng, tính khoảng cách).
+
+## 🚀 Tính năng chính
+
+- [ ] **Login:** Đăng nhập bằng Google Account.
+- [ ] **QR Scan:** Quét mã QR động để điểm danh.
+- [ ] **GPS Check:** Chống điểm danh hộ bằng cách kiểm tra vị trí sinh viên trong phạm vi lớp học.
+- [ ] **Schedule:** Xem lịch học theo ngày/tuần.
+- [ ] **History:** Xem lịch sử điểm danh và tỉ lệ chuyên cần.
+
+## 🛠 Cài đặt để phát triển
+
+1. **Clone project:**
 
    ```bash
-   npm install
+   git clone [https://github.com/Nqhuy29/SaTApp.git](https://github.com/Nqhuy29/SaTApp.git)
+   cd SaTApp
    ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
