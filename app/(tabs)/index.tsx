@@ -1,98 +1,161 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { CheckCircle2, QrCode } from "lucide-react-native";
+import React from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+const today = new Date();
+const formattedDate = today.toLocaleDateString("vi-VN", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
-
-export default function HomeScreen() {
+export default function Home() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <SafeAreaView style={styles.container}>
+      {/* Header cố định */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Điểm Danh</Text>
+        <Text style={styles.headerSubtitle}>{formattedDate}</Text>
+      </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Nút Quét QR lớn */}
+        <TouchableOpacity style={styles.qrButton} activeOpacity={0.8}>
+          <QrCode color="white" size={48} />
+          <Text style={styles.qrText}>Quét QR Để Điểm Danh</Text>
+        </TouchableOpacity>
+
+        {/* Thanh tiến độ hôm nay */}
+        <View style={styles.progressCard}>
+          <View style={styles.progressRow}>
+            <Text style={styles.progressLabel}>Điểm Danh Hôm Nay</Text>
+            <Text style={styles.progressValue}>2/3</Text>
+          </View>
+          <View style={styles.progressBarBg}>
+            <View style={[styles.progressBarFill, { width: "66%" }]} />
+          </View>
+        </View>
+
+        {/* Danh sách lớp học */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Lớp Học Hôm Nay</Text>
+          <TouchableOpacity>
+            <Text style={styles.viewAll}>Xem Tất Cả</Text>
+          </TouchableOpacity>
+        </View>
+
+        <ClassItem title="Lập Trình Java" time="07:00 AM" status="done" />
+        <ClassItem title="Lập Trình Web" time="08:45 AM" status="done" />
+        <ClassItem title="Hệ Cơ Sở Dữ Liệu " time="10:30 PM" status="pending" />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function ClassItem({
+  title,
+  time,
+  status,
+}: {
+  title: string;
+  time: string;
+  status: "done" | "pending";
+}) {
+  const isDone = status === "done";
+  return (
+    <View style={styles.classCard}>
+      <View>
+        <Text style={styles.classTitle}>{title}</Text>
+        <Text style={styles.classTime}>{time}</Text>
+      </View>
+      <View style={[styles.statusBadge, isDone ? styles.bgBlue : styles.bgRed]}>
+        {isDone && (
+          <CheckCircle2 color="white" size={14} style={{ marginRight: 4 }} />
+        )}
+        <Text style={styles.statusText}>
+          {isDone ? "Đã điểm danh" : "Chưa điểm danh"}
+        </Text>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  header: {
+    backgroundColor: "#0d47a1",
+    padding: 20,
+    paddingTop: 40,
+    zIndex: 10,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  headerTitle: { fontSize: 28, fontWeight: "bold", color: "white" },
+  headerSubtitle: { fontSize: 14, color: "#bbdefb", marginTop: 4 },
+  scrollContent: { padding: 20, paddingTop: 30 }, // Tạo khoảng trống với phần QR
+  qrButton: {
+    backgroundColor: "#0d47a1",
+    borderRadius: 20,
+    padding: 40,
+    alignItems: "center",
+    marginBottom: 25,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  qrText: { color: "white", fontWeight: "bold", marginTop: 15, fontSize: 18 },
+  progressCard: {
+    backgroundColor: "#e8f5e9",
+    padding: 20,
+    borderRadius: 15,
+    marginBottom: 25,
   },
+  progressRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  progressLabel: { color: "#2e7d32", fontWeight: "600" },
+  progressValue: { fontSize: 24, fontWeight: "bold", color: "#2e7d32" },
+  progressBarBg: { height: 8, backgroundColor: "#c8e6c9", borderRadius: 4 },
+  progressBarFill: { height: 8, backgroundColor: "#4caf50", borderRadius: 4 },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 15,
+  },
+  sectionTitle: { fontSize: 18, fontWeight: "bold", color: "#333" },
+  viewAll: { color: "#1976d2" },
+  classCard: {
+    backgroundColor: "white",
+    padding: 16,
+    borderRadius: 15,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#eee",
+  },
+  classTitle: { fontSize: 16, fontWeight: "bold", color: "#333" },
+  classTime: { fontSize: 13, color: "#777", marginTop: 4 },
+  statusBadge: {
+    flexDirection: "row",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignItems: "center",
+  },
+  bgBlue: { backgroundColor: "#1a237e" },
+  bgRed: { backgroundColor: "#d32f2f" },
+  statusText: { color: "white", fontSize: 12, fontWeight: "600" },
 });
