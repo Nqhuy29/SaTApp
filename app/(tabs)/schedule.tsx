@@ -2,14 +2,13 @@ import { useRouter } from "expo-router";
 import { CheckCircle2, ChevronLeft } from "lucide-react-native";
 import React, { useState } from "react";
 import {
-    SafeAreaView,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from "react-native";
-
+import { SafeAreaView } from "react-native-safe-area-context";
 const DAYS = ["T2", "T3", "T4", "T5", "T6"];
 
 export default function Schedule() {
