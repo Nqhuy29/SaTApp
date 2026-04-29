@@ -1,3 +1,4 @@
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
 import { CheckCircle2, LogOut, QrCode, XCircle } from "lucide-react-native";
@@ -32,7 +33,11 @@ export default function Home() {
       { text: "Không", style: "cancel" },
       {
         text: "Có",
-        onPress: () => router.replace("/login"),
+        onPress: async () => {
+          // Xóa cache Google → lần sau sẽ hiện màn hình chọn tài khoản
+          await GoogleSignin.signOut();
+          router.replace("/login");
+        },
         style: "destructive",
       },
     ]);

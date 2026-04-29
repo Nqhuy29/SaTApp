@@ -79,11 +79,15 @@ export default function Login() {
         console.log("Đăng nhập thành công!");
         router.replace("/(tabs)");
       } else {
+        // Xóa cache Google → lần sau hiện màn hình chọn tài khoản khác
+        await GoogleSignin.signOut();
         setErrorText(
           `Spring Boot từ chối Token (HTTP ${res.status}). Xin hãy kiểm tra lại cấu hình Audience của Java nhé!`
         );
       }
     } catch (e: any) {
+      // Xóa cache Google → lần sau hiện màn hình chọn tài khoản khác
+      await GoogleSignin.signOut();
       setErrorText("Lỗi kết nối Backend Ngrok: " + (e.message || e));
     }
   };
