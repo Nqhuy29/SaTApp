@@ -138,7 +138,7 @@ export default function Home() {
 
         <ClassItem title="Lập Trình Java" time="07:00 AM" status="done" />
         <ClassItem title="Lập Trình Web" time="08:45 AM" status="done" />
-        <ClassItem title="Hệ Cơ Sở Dữ Liệu" time="10:30 PM" status="pending" />
+        <ClassItem title="Hệ Cơ Sở Dữ Liệu" time="10:30 AM" status="pending" />
       </ScrollView>
 
       {/* Modal Camera */}
