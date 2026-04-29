@@ -1,5 +1,7 @@
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import { api } from "@/src/services/api";
+import { tokenStorage } from "@/src/services/tokenStorage";
 import { useRouter } from "expo-router";
 import { CheckCircle2, LogOut, QrCode, XCircle } from "lucide-react-native";
 import React, { useState } from "react";
@@ -34,9 +36,20 @@ export default function Home() {
       {
         text: "Có",
         onPress: async () => {
-          // Xóa cache Google → lần sau sẽ hiện màn hình chọn tài khoản
-          await GoogleSignin.signOut();
-          router.replace("/login");
+          try {
+            const refreshToken = await tokenStorage.getRefreshToken();
+            if (refreshToken) {
+              // Thông báo backend xóa refresh token
+              await api.post("/auth/logout", { refreshToken });
+            }
+          } catch (_) {
+            // Bỏ qua lỗi network khi logout
+          } finally {
+            // Xóa token local + cache Google
+            await tokenStorage.clearTokens();
+            await GoogleSignin.signOut();
+            router.replace("/login");
+          }
         },
         style: "destructive",
       },
