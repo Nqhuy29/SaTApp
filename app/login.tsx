@@ -46,6 +46,7 @@ export default function Login() {
           style={styles.content}
         >
           {/* LOGO AREA */}
+          {/* Tối ưu: Đặt logo vào trong một vòng tròn trắng có bóng để nổi bật hơn trên nền gradient */}
           <View style={styles.logoSection}>
             <View style={styles.logoWhiteCircle}>
               <Image
