@@ -1,35 +1,91 @@
-import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient"; // Cần cài: npx expo install expo-linear-gradient
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
 import {
-    Alert,
-    Dimensions,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  GoogleSignin,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Dimensions,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
+GoogleSignin.configure({
+  // Web Client ID chuyên phục vụ Backend Server để đẻ ra chuỗi idToken phù hợp
+  webClientId:
+    "1053516508108-d32l6qi3ie8fk671bg2iv4cf7m9kve8l.apps.googleusercontent.com",
+});
+
 export default function Login() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorText, setErrorText] = useState("");
 
-  const handleLogin = () => {
-    if (!email.endsWith("@hactech.edu.vn")) {
-      Alert.alert("Thông báo", "Vui lòng sử dụng email @hactech.edu.vn");
-      return;
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setErrorText("");
+    try {
+      // Đảm bảo thiết bị sẵn sàng Play Services
+      await GoogleSignin.hasPlayServices();
+
+      // Gọi Pop-up Native dưới đáy màn hình
+      const userInfo = await GoogleSignin.signIn();
+      const idToken = userInfo?.data?.idToken;
+
+      if (idToken) {
+        // Truyền idToken Native mượt mà này sang Backend
+        await sendTokenToBackend(idToken);
+      } else {
+        setErrorText("Không trích xuất được idToken từ Google.");
+      }
+    } catch (error: any) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        setErrorText("Bạn vừa hủy đăng nhập.");
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        setErrorText("Đang xử lý đăng nhập...");
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        setErrorText("Điện thoại thiếu dịch vụ Google Play.");
+      } else {
+        // Nếu in ra DEVELOPER_ERROR (Code 10), thì do chữ ký SHA-1 trên Google Cloud Console chưa khớp!
+        setErrorText(`Lỗi: ${error.message} (Mã: ${error.code})`);
+      }
+    } finally {
+      setLoading(false);
     }
-    router.replace("/(tabs)");
+  };
+
+  const sendTokenToBackend = async (idToken: string) => {
+    try {
+      const res = await fetch(
+        "https://efficient-magnifier-irritable.ngrok-free.dev/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ idToken }),
+        }
+      );
+
+      if (res.ok) {
+        console.log("Đăng nhập thành công!");
+        router.replace("/(tabs)");
+      } else {
+        setErrorText(
+          `Spring Boot từ chối Token (HTTP ${res.status}). Xin hãy kiểm tra lại cấu hình Audience của Java nhé!`
+        );
+      }
+    } catch (e: any) {
+      setErrorText("Lỗi kết nối Backend Ngrok: " + (e.message || e));
+    }
   };
 
   return (
@@ -41,10 +97,7 @@ export default function Login() {
       />
 
       <SafeAreaView style={{ flex: 1 }}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.content}
-        >
+        <View style={styles.content}>
           {/* LOGO AREA */}
           <View style={styles.logoSection}>
             <View style={styles.logoWhiteCircle}>
@@ -58,94 +111,49 @@ export default function Login() {
             <Text style={styles.appTagline}>Ứng dụng điểm danh sinh viên</Text>
           </View>
 
-          {/* FORM CARD */}
+          {/* LOGIN CARD */}
           <View style={styles.loginCard}>
-            <Text style={styles.loginTitle}>Đăng Nhập</Text>
+            <Text style={styles.loginTitle}>Chào mừng bạn!</Text>
+            <Text style={styles.loginSubtitle}>
+              Đăng nhập bằng tài khoản Google của trường để tiếp tục
+            </Text>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email sinh viên</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons
-                  name="mail-outline"
-                  size={20}
-                  color="#0d47a1"
-                  style={styles.icon}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="example@hactech.edu.vn"
-                  placeholderTextColor="#a0a0a0"
-                  value={email}
-                  onChangeText={setEmail}
-                  autoCapitalize="none"
-                />
+            {/* Error message */}
+            {errorText !== "" && (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>{errorText}</Text>
               </View>
-            </View>
+            )}
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Mật khẩu</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons
-                  name="lock-closed-outline"
-                  size={20}
-                  color="#0d47a1"
-                  style={styles.icon}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="••••••••"
-                  placeholderTextColor="#a0a0a0"
-                  secureTextEntry={!isPasswordVisible}
-                  value={password}
-                  onChangeText={setPassword}
-                />
-                <TouchableOpacity
-                  onPress={() => setIsPasswordVisible(!isPasswordVisible)}
-                >
-                  <Ionicons
-                    name={isPasswordVisible ? "eye-outline" : "eye-off-outline"}
-                    size={20}
-                    color="#666"
+            {/* Google Sign-In Button */}
+            <TouchableOpacity
+              style={[styles.googleBtn, loading && styles.googleBtnDisabled]}
+              onPress={handleGoogleLogin}
+              disabled={loading}
+              activeOpacity={0.85}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#0d47a1" />
+              ) : (
+                <>
+                  <Image
+                    source={{
+                      uri: "https://cdn-icons-png.flaticon.com/512/2991/2991148.png",
+                    }}
+                    style={styles.googleIcon}
                   />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <TouchableOpacity style={styles.btnLogin} onPress={handleLogin}>
-              <LinearGradient
-                colors={["#0d47a1", "#42a5f5"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.gradientBtn}
-              >
-                <Text style={styles.btnLoginText}>ĐĂNG NHẬP</Text>
-              </LinearGradient>
+                  <Text style={styles.googleBtnText}>
+                    Đăng nhập với Google
+                  </Text>
+                </>
+              )}
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.forgotBtn}>
-              <Text style={styles.forgotText}>Quên mật khẩu?</Text>
-            </TouchableOpacity>
+            <Text style={styles.hintText}>
+              Vui lòng sử dụng email <Text style={styles.hintBold}>@hactech.edu.vn</Text> của trường
+            </Text>
           </View>
-
-          {/* FOOTER */}
-          <View style={styles.footer}>
-            <View style={styles.dividerRow}>
-              <View style={styles.line} />
-              <Text style={styles.orText}>Hoặc tiếp tục với</Text>
-              <View style={styles.line} />
-            </View>
-
-            <TouchableOpacity style={styles.googleBtn}>
-              <Image
-                source={{
-                  uri: "https://cdn-icons-png.flaticon.com/512/2991/2991148.png",
-                }}
-                style={styles.googleIcon}
-              />
-              <Text style={styles.googleBtnText}>Google</Text>
-            </TouchableOpacity>
-          </View>
-        </KeyboardAvoidingView>
+        </View>
       </SafeAreaView>
     </View>
   );
@@ -164,7 +172,7 @@ const styles = StyleSheet.create({
   content: { flex: 1, paddingHorizontal: 25, justifyContent: "center" },
 
   // Logo
-  logoSection: { alignItems: "center", marginBottom: 30 },
+  logoSection: { alignItems: "center", marginBottom: 35 },
   logoWhiteCircle: {
     width: 110,
     height: 110,
@@ -195,7 +203,7 @@ const styles = StyleSheet.create({
   loginCard: {
     backgroundColor: "#fff",
     borderRadius: 30,
-    padding: 25,
+    padding: 28,
     shadowColor: "#0d47a1",
     shadowOpacity: 0.1,
     shadowRadius: 20,
@@ -205,57 +213,64 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     color: "#333",
-    marginBottom: 20,
     textAlign: "center",
-  },
-  inputGroup: { marginBottom: 18 },
-  label: {
-    fontSize: 13,
-    color: "#666",
-    fontWeight: "600",
     marginBottom: 8,
-    marginLeft: 4,
   },
-  inputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f0f4f8",
-    borderRadius: 15,
-    paddingHorizontal: 15,
-    height: 55,
+  loginSubtitle: {
+    fontSize: 13,
+    color: "#888",
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 24,
+    paddingHorizontal: 10,
+  },
+
+  // Error
+  errorBox: {
+    backgroundColor: "#fff3f3",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#e1e8ef",
+    borderColor: "#ffcccc",
   },
-  icon: { marginRight: 10 },
-  input: { flex: 1, color: "#333", fontSize: 15 },
-
-  // Button
-  btnLogin: { marginTop: 10, borderRadius: 15, overflow: "hidden" },
-  gradientBtn: { height: 55, justifyContent: "center", alignItems: "center" },
-  btnLoginText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-    letterSpacing: 1,
+  errorText: {
+    color: "#d32f2f",
+    fontSize: 13,
+    textAlign: "center",
+    lineHeight: 18,
   },
-  forgotBtn: { marginTop: 15, alignItems: "center" },
-  forgotText: { color: "#0d47a1", fontSize: 14, fontWeight: "600" },
 
-  // Footer
-  footer: { marginTop: 30 },
-  dividerRow: { flexDirection: "row", alignItems: "center", marginBottom: 20 },
-  line: { flex: 1, height: 1, backgroundColor: "#dce4ec" },
-  orText: { marginHorizontal: 15, color: "#999", fontSize: 13 },
+  // Google Button
   googleBtn: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    height: 55,
-    borderRadius: 15,
+    height: 58,
+    borderRadius: 16,
     backgroundColor: "#fff",
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#e1e8ef",
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  googleIcon: { width: 20, height: 20, marginRight: 10 },
-  googleBtnText: { color: "#444", fontSize: 15, fontWeight: "bold" },
+  googleBtnDisabled: {
+    opacity: 0.7,
+  },
+  googleIcon: { width: 22, height: 22, marginRight: 12 },
+  googleBtnText: { color: "#333", fontSize: 15, fontWeight: "700" },
+
+  // Hint
+  hintText: {
+    marginTop: 18,
+    fontSize: 12,
+    color: "#aaa",
+    textAlign: "center",
+  },
+  hintBold: {
+    color: "#0d47a1",
+    fontWeight: "700",
+  },
 });
