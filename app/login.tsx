@@ -6,10 +6,10 @@
 //   GoogleSignin,
 //   statusCodes,
 // } from "@react-native-google-signin/google-signin";
+import { tokenStorage } from "@/src/services/tokenStorage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import { tokenStorage } from "@/src/services/tokenStorage";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
