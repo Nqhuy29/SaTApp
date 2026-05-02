@@ -1,4 +1,7 @@
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
+/* 
+⚠️ DEV: COMMENT để chạy được trên Expo Go
+*/
+// import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
 import { CheckCircle2, LogOut, QrCode, XCircle } from "lucide-react-native";
@@ -13,7 +16,10 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
+// 👉 Thêm dòng này để "giả lập" object GoogleSignin, tránh lỗi khi gọi hàm signOut
+const GoogleSignin: any = {
+  signOut: () => Promise.resolve(),
+};
 const today = new Date();
 const formattedDate = today.toLocaleDateString("vi-VN", {
   weekday: "long",
@@ -21,6 +27,14 @@ const formattedDate = today.toLocaleDateString("vi-VN", {
   month: "long",
   year: "numeric",
 });
+
+//Biến giả: Thay đổi thông tin người dùng và lịch học để test giao diện
+const MOCK_USER = {
+  name: "Nguyễn Quang Huy",
+  avatar: null, // Có thể thay bằng URL ảnh nếu có
+  email: "nqhuy29@hactech.edu.vn",
+  studentID: "CD234367",
+};
 
 export default function Home() {
   const router = useRouter();
@@ -67,12 +81,11 @@ export default function Home() {
         <View style={styles.headerContent}>
           {/* Trái: Avatar */}
           <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>H</Text>
+            {/* Tự động lấy chữ cái đầu của tên */}
+            <Text style={styles.avatarText}>{MOCK_USER.name.charAt(0)}</Text>
           </View>
-
-          {/* Giữa: Thông tin */}
           <View style={styles.headerInfo}>
-            <Text style={styles.userName}>Nguyễn Quang Huy</Text>
+            <Text style={styles.userName}>{MOCK_USER.name}</Text>
             <Text style={styles.headerSubtitle}>{formattedDate}</Text>
           </View>
 

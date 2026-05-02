@@ -1,7 +1,11 @@
-import {
-  GoogleSignin,
-  statusCodes,
-} from "@react-native-google-signin/google-signin";
+/*
+⚠️ DEV: COMMENT Google Sign-In để Expo không bị crash
+👉 Khi build APK thì bỏ comment lại
+*/
+// import {
+//   GoogleSignin,
+//   statusCodes,
+// } from "@react-native-google-signin/google-signin";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -16,19 +20,53 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+// 🔥 DEV MODE: Bật = bỏ qua login để chỉnh giao diện
+const DEV_BYPASS_LOGIN = true;
+
 const { width } = Dimensions.get("window");
+// Cấu hình Google Sign-In ngay khi module được import,
+// đảm bảo rằng mọi chức năng liên quan đến Google Sign-In đều có cấu hình sẵn sàng khi được gọi.
 
-GoogleSignin.configure({
-  // Web Client ID chuyên phục vụ Backend Server để đẻ ra chuỗi idToken phù hợp
-  webClientId:
-    "1053516508108-d32l6qi3ie8fk671bg2iv4cf7m9kve8l.apps.googleusercontent.com",
-});
+/*
+⚠️ DEV: COMMENT Google Sign-In để Expo không bị crash
+👉 Khi build APK thì bỏ comment lại
+*/
+// GoogleSignin.configure({
+//   // Web Client ID chuyên phục vụ Backend Server để đẻ ra chuỗi idToken phù hợp
+//   webClientId:
+//     "1053516508108-d32l6qi3ie8fk671bg2iv4cf7m9kve8l.apps.googleusercontent.com",
+// });
+// 👉 fallback để tránh lỗi khi gọi hàm trong code
+let GoogleSignin: any = {
+  configure: () => {},
+  hasPlayServices: () => Promise.resolve(true),
+  signIn: () => Promise.resolve({ data: { idToken: "fake-id-token" } }),
+  signOut: () => Promise.resolve(),
+};
+let statusCodes: any = {
+  SIGN_IN_CANCELLED: "SIGN_IN_CANCELLED",
+  IN_PROGRESS: "IN_PROGRESS",
+  PLAY_SERVICES_NOT_AVAILABLE: "PLAY_SERVICES_NOT_AVAILABLE",
+};
 
+// Các hàm liên quan đến Google Sign-In được giữ nguyên, đảm bảo tính nhất quán và dễ bảo trì.
 export default function Login() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState("");
-
+  // 🔥 DEV: tự động vào app không cần login
+  // Tự động chuyển hướng khi vừa vào màn hình Login
+  useEffect(() => {
+    if (DEV_BYPASS_LOGIN) {
+      console.log("Đang ở chế độ DEV: Tự động vào App.......");
+      // Sử dụng setImmediate hoặc setTimeout một chút để router kịp sẵn sàng
+      const timer = setTimeout(() => {
+        router.replace("/(tabs)");
+      }, 500); // 0.5 giây cho chắc chắn router đã sẵn sàng
+      return () => clearTimeout(timer);
+    }
+  }, []);
+  // Hàm xử lý đăng nhập Google, được tối ưu để bắt lỗi chi tiết và cung cấp phản hồi rõ ràng cho người dùng.
   const handleGoogleLogin = async () => {
     setLoading(true);
     setErrorText("");
@@ -61,7 +99,8 @@ export default function Login() {
       setLoading(false);
     }
   };
-
+  // Hàm gửi idToken lên Backend, được tối ưu để xử lý lỗi chi tiết
+  // và đảm bảo rằng người dùng nhận được phản hồi rõ ràng về trạng thái đăng nhập của họ.
   const sendTokenToBackend = async (idToken: string) => {
     try {
       const res = await fetch(
@@ -72,7 +111,7 @@ export default function Login() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ idToken }),
-        }
+        },
       );
 
       if (res.ok) {
@@ -82,7 +121,7 @@ export default function Login() {
         // Xóa cache Google → lần sau hiện màn hình chọn tài khoản khác
         await GoogleSignin.signOut();
         setErrorText(
-          `Spring Boot từ chối Token (HTTP ${res.status}). Xin hãy kiểm tra lại cấu hình Audience của Java nhé!`
+          `Spring Boot từ chối Token (HTTP ${res.status}). Xin hãy kiểm tra lại cấu hình Audience của Java nhé!`,
         );
       }
     } catch (e: any) {
@@ -147,15 +186,14 @@ export default function Login() {
                     }}
                     style={styles.googleIcon}
                   />
-                  <Text style={styles.googleBtnText}>
-                    Đăng nhập với Google
-                  </Text>
+                  <Text style={styles.googleBtnText}>Đăng nhập với Google</Text>
                 </>
               )}
             </TouchableOpacity>
 
             <Text style={styles.hintText}>
-              Vui lòng sử dụng email <Text style={styles.hintBold}>@hactech.edu.vn</Text> của trường
+              Vui lòng sử dụng email{" "}
+              <Text style={styles.hintBold}>@hactech.edu.vn</Text> của trường
             </Text>
           </View>
         </View>
