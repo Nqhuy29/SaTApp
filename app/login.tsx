@@ -8,7 +8,8 @@
 // } from "@react-native-google-signin/google-signin";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { tokenStorage } from "@/src/services/tokenStorage";
 import {
   ActivityIndicator,
   Dimensions,
@@ -107,14 +108,18 @@ export default function Login() {
         "https://efficient-magnifier-irritable.ngrok-free.dev/auth/login",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ idToken }),
         },
       );
 
       if (res.ok) {
+        const data = await res.json();
+        const { accessToken, refreshToken } = data.result;
+
+        // Lưu token an toàn vào SecureStore
+        await tokenStorage.saveTokens(accessToken, refreshToken);
+
         console.log("Đăng nhập thành công!");
         router.replace("/(tabs)");
       } else {
