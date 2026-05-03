@@ -2,11 +2,11 @@ import { useRouter } from "expo-router";
 import { CheckCircle2, ChevronLeft } from "lucide-react-native";
 import React, { useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 const DAYS = ["T2", "T3", "T4", "T5", "T6"];
@@ -60,23 +60,23 @@ export default function Schedule() {
         contentContainerStyle={styles.scrollContent}
       >
         <ScheduleCard
-          title="Cấu Trúc Dữ Liệu"
+          title="Lập trình java"
           room="Phòng 205"
-          time="09:00 - 10:30"
+          time="07:00 - 08:30"
           status="done"
           color="#0d47a1"
         />
         <ScheduleCard
-          title="Phát Triển Web"
-          room="Phòng 203"
-          time="11:00 - 12:30"
+          title="Lập trình web"
+          room="Phòng 205"
+          time="08:45 - 10:15"
           status="done"
           color="#0d47a1"
         />
         <ScheduleCard
           title="Hệ Quản Trị CSDL"
-          room="Phòng 304"
-          time="14:00 - 15:30"
+          room="Phòng 205"
+          time="10:30 - 12:00"
           status="pending"
           color="#d32f2f"
         />

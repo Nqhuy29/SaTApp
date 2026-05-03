@@ -2,9 +2,9 @@
 ⚠️ DEV: COMMENT để chạy được trên Expo Go
 */
 // import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import { CameraView, useCameraPermissions } from "expo-camera";
 import { api } from "@/src/services/api";
 import { tokenStorage } from "@/src/services/tokenStorage";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
 import { CheckCircle2, LogOut, QrCode, XCircle } from "lucide-react-native";
 import React, { useState } from "react";
@@ -42,6 +42,8 @@ export default function Home() {
   const router = useRouter();
   const [permission, requestPermission] = useCameraPermissions();
   const [isScanning, setIsScanning] = useState(false);
+  // Thêm State để quản lý ẩn/hiện cửa sổ
+  const [isHistoryVisible, setIsHistoryVisible] = useState(false);
 
   // 1. Xử lý Đăng xuất
   const handleLogout = () => {
@@ -133,25 +135,72 @@ export default function Home() {
             <View style={[styles.progressBarFill, { width: "66%" }]} />
           </View>
         </View>
+        <Modal
+          visible={isHistoryVisible}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setIsHistoryVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.bottomSheet}>
+              <View style={styles.dragHandle} />
 
+              {/* Container Header này sẽ đẩy 2 phần tử sang 2 bên */}
+              <View style={styles.modalHeaderRow}>
+                <Text style={styles.modalTitle}>Lớp Học Hôm Nay</Text>
+                <TouchableOpacity
+                  onPress={() => setIsHistoryVisible(false)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} // Tăng vùng bấm cho nút
+                >
+                  <Text style={styles.closeText}>Đóng</Text>
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 40 }}
+              >
+                <ClassItem
+                  title="Lập Trình Java"
+                  time="07:00 AM"
+                  status="done"
+                />
+                <ClassItem
+                  title="Lập Trình Web"
+                  time="08:45 AM"
+                  status="done"
+                />
+                <ClassItem
+                  title="Hệ Quản Trị CSDL"
+                  time="10:30 AM"
+                  status="pending"
+                />
+                <ClassItem
+                  title="Khoa Học Máy Tính"
+                  time="01:00 PM"
+                  status="missed"
+                />
+                <ClassItem
+                  title="Mạng Máy Tính"
+                  time="02:30 PM"
+                  status="pending"
+                />
+                <ClassItem title="Toán Rời Rạc" time="04:00 PM" status="done" />
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
         {/* Lớp học */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Lớp Học Hôm Nay</Text>
-          <TouchableOpacity
-            onPress={() =>
-              Alert.alert(
-                "Thông báo",
-                "Chức năng xem danh sách chi tiết đang được phát triển.",
-              )
-            }
-          >
+          <TouchableOpacity onPress={() => setIsHistoryVisible(true)}>
             <Text style={styles.viewAll}>Xem Tất Cả</Text>
           </TouchableOpacity>
         </View>
 
         <ClassItem title="Lập Trình Java" time="07:00 AM" status="done" />
         <ClassItem title="Lập Trình Web" time="08:45 AM" status="done" />
-        <ClassItem title="Hệ Cơ Sở Dữ Liệu" time="10:30 AM" status="pending" />
+        <ClassItem title="Hệ Quản Trị CSDL" time="10:30 AM" status="pending" />
       </ScrollView>
 
       {/* Modal Camera */}
@@ -185,7 +234,7 @@ function ClassItem({
 }: {
   title: string;
   time: string;
-  status: "done" | "pending";
+  status: "done" | "pending" | "missed";
 }) {
   const isDone = status === "done";
   return (
@@ -344,4 +393,48 @@ const styles = StyleSheet.create({
     borderRadius: 25,
   },
   closeBtnText: { color: "#d32f2f", fontWeight: "bold", fontSize: 16 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)", // Làm tối nền phía sau
+    justifyContent: "flex-end", // Đẩy cửa sổ xuống đáy
+  },
+  bottomSheet: {
+    backgroundColor: "white",
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    height: "70%", // Chiếm 70% chiều cao màn hình
+    paddingHorizontal: 20,
+  },
+  dragHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: "#ccc",
+    borderRadius: 2.5,
+    alignSelf: "center",
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  modalHeaderRow: {
+    flexDirection: "row", // Sắp xếp theo hàng ngang
+    justifyContent: "space-between", // Đẩy tiêu đề sang trái, nút đóng sang phải
+    alignItems: "center", // Căn giữa theo chiều dọc
+    marginBottom: 20,
+    width: "100%", // Đảm bảo chiếm hết chiều rộng của BottomSheet
+  },
+  closeText: {
+    color: "#0d47a1", // Màu xanh đậm đồng bộ với Header
+    fontWeight: "bold",
+    fontSize: 16,
+  },
 });
