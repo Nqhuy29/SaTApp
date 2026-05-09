@@ -1,5 +1,6 @@
 import { saveAttendance } from "@/db";
 import { tokenStorage } from "@/src/services/tokenStorage";
+import * as Application from "expo-application";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
@@ -94,6 +95,23 @@ const TODAY_CLASSES = [
   },
 ];
 
+const getDeviceId = async (): Promise<string> => {
+  try {
+    if (Platform.OS === "android") {
+      // Gọi hàm androidId() và xử lý trường hợp null
+      const id = Application.getAndroidId();
+      return id ?? "UNKNOWN_ANDROID";
+    } else {
+      // Đợi kết quả từ iOS
+      const id = await Application.getIosIdForVendorAsync();
+      return id ?? "UNKNOWN_IOS";
+    }
+  } catch (error) {
+    console.error("Lỗi lấy Device ID:", error);
+    return "DEVICE_ERROR";
+  }
+};
+
 export default function Home() {
   const router = useRouter();
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
@@ -152,18 +170,43 @@ export default function Home() {
 
   // Hàm thực hiện điểm danh khi bấm nút
   const confirmAttendance = async () => {
-    if (!scannedData || isProcessing.current) return;
+    const uniqueId = await getDeviceId();
 
+    if (!scannedData || isProcessing.current) return;
     isProcessing.current = true;
+
     try {
-      const location = await Location.getCurrentPositionAsync({});
+      // 1. Kiểm tra GPS có đang bật không
+      const enabled = await Location.hasServicesEnabledAsync();
+      if (!enabled) {
+        isProcessing.current = false;
+        return Alert.alert("Lỗi", "Vui lòng bật GPS trên thiết bị của bạn.");
+      }
+
+      // 2. Lấy vị trí với cấu hình bắt buộc cập nhật mới
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced, // Độ chính xác cân bằng (GPS + Wifi)
+        timeInterval: 1000,                  // Thử lấy dữ liệu mới nhất
+      });
+
+      // Kiểm tra nếu tọa độ quá cũ (ví dụ lấy từ 30s trước)
+      const locationAge = Date.now() - location.timestamp;
+      if (locationAge > 30000) {
+        // Nếu tọa độ cũ quá, ép máy quét lại lần nữa với độ chính xác cao hơn
+        const freshLocation = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
+        // Gán lại location bằng dữ liệu mới nhất
+        Object.assign(location, freshLocation);
+      }
+
       const success = saveAttendance({
         studentId: MOCK_USER.email,
         classId: scannedData.id,
         qrContent: scannedData.qrContent,
         lat: location.coords.latitude,
         lon: location.coords.longitude,
-        deviceId: "DEVICE_01",
+        deviceId: uniqueId,
         timestamp: new Date().toISOString(),
       });
 
@@ -182,7 +225,8 @@ export default function Home() {
       }
     } catch (error) {
       isProcessing.current = false;
-      Alert.alert("Lỗi", "Không thể lấy vị trí hoặc lưu điểm danh");
+      console.error("Lỗi lấy vị trí:", error);
+      Alert.alert("Lỗi", "Không thể lấy vị trí. Hãy chắc chắn bạn đang ở nơi thoáng và đã bật GPS.");
     }
   };
 

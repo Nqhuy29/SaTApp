@@ -1,21 +1,22 @@
 import { clearHistory, getAllAttendances } from "@/db";
-import { useRouter } from "expo-router"; // Để điều hướng quay lại
+import { useRouter } from "expo-router";
 import {
-    ArrowLeft,
-    Clock,
-    MapPin,
-    RefreshCcw,
-    Trash2,
-} from "lucide-react-native"; // Thêm ArrowLeft
+  ArrowLeft,
+  Clock,
+  MapPin,
+  RefreshCcw,
+  Smartphone,
+  Trash2,
+} from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
-    Alert,
-    FlatList,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -52,19 +53,17 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* SỬA LỖI 2: Đảm bảo icon hệ thống (giờ, pin) có màu đen trên nền trắng */}
       <StatusBar barStyle="dark-content" backgroundColor="white" />
 
       <View style={styles.header}>
         <View style={styles.leftHeader}>
-          {/* SỬA LỖI 1: Nút quay lại */}
           <TouchableOpacity
             onPress={() => router.back()}
             style={styles.backBtn}
           >
             <ArrowLeft color="#333" size={24} />
           </TouchableOpacity>
-          <Text style={styles.title}>Lịch Sử</Text>
+          <Text style={styles.title}>Lịch Sử test</Text>
         </View>
 
         <View style={styles.headerButtons}>
@@ -119,6 +118,15 @@ export default function HistoryScreen() {
               </Text>
             </View>
 
+            {/* --- PHẦN THÊM MỚI: HIỂN THỊ MÃ THIẾT BỊ --- */}
+            <View style={styles.infoRow}>
+              <Smartphone size={14} color="#666" />
+              <Text style={styles.infoText}>
+                Thiết bị: {item.deviceId || "Không xác định"}
+              </Text>
+            </View>
+            {/* ------------------------------------------ */}
+
             <Text style={styles.qrContent} numberOfLines={1}>
               QR: {item.qrContent}
             </Text>
@@ -138,7 +146,6 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: "white",
     elevation: 2,
-    // Đảm bảo header không đè sát lên tai thỏ của iPhone/Android
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
@@ -161,6 +168,11 @@ const styles = StyleSheet.create({
     elevation: 1,
     borderLeftWidth: 5,
     borderLeftColor: "#0d47a1",
+    // Thêm shadow cho iOS
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   cardHeader: {
     flexDirection: "row",
@@ -174,6 +186,14 @@ const styles = StyleSheet.create({
   statusText: { fontSize: 10, fontWeight: "bold", color: "#666" },
   infoRow: { flexDirection: "row", alignItems: "center", marginBottom: 5 },
   infoText: { marginLeft: 8, color: "#666", fontSize: 13 },
-  qrContent: { fontSize: 12, color: "#999", marginTop: 5, fontStyle: "italic" },
+  qrContent: {
+    fontSize: 11,
+    color: "#aaa",
+    marginTop: 8,
+    fontStyle: "italic",
+    borderTopWidth: 0.5,
+    borderTopColor: "#eee",
+    paddingTop: 5,
+  },
   emptyText: { textAlign: "center", marginTop: 50, color: "#999" },
 });
