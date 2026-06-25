@@ -1,7 +1,8 @@
 import axios from "axios";
+import Constants from "expo-constants";
 import { tokenStorage } from "./tokenStorage";
 
-const BASE_URL = "https://efficient-magnifier-irritable.ngrok-free.dev";
+export const BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || "http://localhost:8080";
 
 export const api = axios.create({
   baseURL: BASE_URL,

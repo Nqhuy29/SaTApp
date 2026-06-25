@@ -1,250 +1,338 @@
 import { useRouter } from "expo-router";
-import { CheckCircle2, ChevronLeft } from "lucide-react-native";
-import React, { useState } from "react";
 import {
-  Dimensions,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  RotateCcw,
+} from "lucide-react-native";
+import React from "react";
+import {
+  ActivityIndicator,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 
-const DAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
-const { width } = Dimensions.get("window");
+import { useWeekSchedule } from "@/hooks/useWeekSchedule";
+import { formatDateHeader, getDayLabel } from "@/src/utils/scheduleDate";
+import { TimelineCard } from "@/components/schedule/TimelineCard";
 
 export default function Schedule() {
-  const [selectedDay, setSelectedDay] = useState("T5");
   const router = useRouter();
+  
+  const {
+    weekNumber,
+    setWeekNumber,
+    selectedDate,
+    setSelectedDate,
+    weekDates,
+    currentClasses,
+    todayStr,
+    isLoading,
+    refreshing,
+    onRefresh,
+    defaultWeek,
+    isDefaultWeek,
+    weekLabel,
+    scheduleByDate,
+  } = useWeekSchedule();
 
   return (
-    // Dùng View làm container gốc để quản lý màu nền Status Bar tốt hơn
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0d47a1" />
+    <LinearGradient colors={["#0d47a1", "#1976d2"]} style={styles.container}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+        <StatusBar barStyle="light-content" backgroundColor="#0d47a1" />
 
-      <View style={styles.header}>
-        {/* SafeAreaView lo phần khoảng trống phía trên (Pin, Giờ) */}
-        <SafeAreaView edges={["top"]}>
-          <View style={styles.topRow}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backBtn}
-            >
-              <ChevronLeft color="white" size={24} />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Lịch Học</Text>
-            <View style={styles.weekPicker}>
-              <Text style={styles.weekText}>Tuần 4</Text>
-            </View>
-          </View>
+      {/* ═══════ TOP BAR (CỐ ĐỊNH, KHÔNG BỊ TRÔI THEO) ═══════ */}
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
+          <ChevronLeft color="white" size={28} />
+        </TouchableOpacity>
 
-          <View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.dayTabsContainer}
-            >
-              {DAYS.map((day) => (
-                <TouchableOpacity
-                  key={day}
-                  onPress={() => setSelectedDay(day)}
-                  style={[
-                    styles.dayTab,
-                    selectedDay === day && styles.dayTabActive,
-                    (day === "T7" || day === "CN") &&
-                      selectedDay !== day && {
-                        backgroundColor: "rgba(255,255,255,0.05)",
-                      },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.dayTabText,
-                      selectedDay === day && styles.dayTabTextActive,
-                      (day === "T7" || day === "CN") &&
-                        selectedDay !== day && { color: "#ffab91" },
-                    ]}
-                  >
-                    {day}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        </SafeAreaView>
-      </View>
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.headerTitle}>Lịch học</Text>
+        </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <Text style={styles.dayIndicator}>
-          Lịch học{" "}
-          {selectedDay === "CN" ? "Chủ Nhật" : `Thứ ${selectedDay.slice(1)}`}
-        </Text>
+        <View style={styles.headerWeekNav}>
+          <TouchableOpacity onPress={() => setWeekNumber((w) => Math.max(1, (w || defaultWeek) - 1))} style={styles.headerArrowBtn}>
+            <ChevronLeft color="white" size={18} />
+          </TouchableOpacity>
 
-        {selectedDay === "T7" || selectedDay === "CN" ? (
-          <ScheduleCard
-            title="Đồ án chuyên ngành (Học bù)"
-            room="Phòng Lab 402"
-            time="08:00 - 11:00"
-            status="pending"
-            color="#f57c00"
-          />
-        ) : (
-          <>
-            <ScheduleCard
-              title="Lập trình Java"
-              room="Phòng 205"
-              time="07:00 - 08:30"
-              status="done"
-              color="#0d47a1"
-            />
-            <ScheduleCard
-              title="Lập trình Web"
-              room="Phòng 205"
-              time="08:45 - 10:15"
-              status="done"
-              color="#0d47a1"
-            />
-            <ScheduleCard
-              title="Hệ Quản Trị CSDL"
-              room="Phòng 205"
-              time="10:30 - 12:00"
-              status="pending"
-              color="#d32f2f"
-            />
-          </>
-        )}
-        <View style={{ height: 30 }} />
-      </ScrollView>
-    </View>
-  );
-}
+          <TouchableOpacity onPress={() => setWeekNumber(defaultWeek)} activeOpacity={0.8} style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={styles.headerWeekText}>
+              {weekLabel}
+            </Text>
+            {!isDefaultWeek && (
+              <RotateCcw color="#fff" size={11} style={{ marginLeft: 2, marginRight: 2 }} />
+            )}
+          </TouchableOpacity>
 
-function ScheduleCard({ title, room, time, status, color }: any) {
-  const isDone = status === "done";
-  return (
-    <View style={[styles.card, { borderLeftColor: color }]}>
-      <View style={styles.cardInfo}>
-        <Text style={styles.cardTitle}>{title}</Text>
-        <Text style={styles.cardSub}>{room}</Text>
-        <View style={styles.timeBadge}>
-          <Text style={styles.timeText}>● {time}</Text>
+          <TouchableOpacity onPress={() => setWeekNumber((w) => (w || defaultWeek) + 1)} style={styles.headerArrowBtn}>
+            <ChevronRight color="white" size={18} />
+          </TouchableOpacity>
         </View>
       </View>
-      <View style={[styles.statusBadge, isDone ? styles.bgBlue : styles.bgRed]}>
-        {isDone && (
-          <CheckCircle2 color="white" size={14} style={{ marginRight: 4 }} />
-        )}
-        <Text style={styles.statusText}>
-          {isDone ? "Có mặt" : "Vắng/Chưa học"}
-        </Text>
-      </View>
-    </View>
+
+      {/* ═══════ SCROLL VIEW (VÙNG CÓ THỂ CUỘN LƯỚT) ═══════ */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={styles.scrollViewBg}
+        contentContainerStyle={styles.scrollContentContainer}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#0d47a1"]} />}
+      >
+        
+        {/* THANH NGÀY THÁNG ĐƯỢC ĐẨY VÀO SCROLL, CUỘN XUỐNG SẼ ĐI THEO VÀ ẨN LÊN TRÊN */}
+        <View style={styles.dateStripWrapper}>
+          <View style={styles.dateStrip}>
+            {weekDates.map((dateStr) => {
+              const d = new Date(dateStr + "T00:00:00");
+              const dayNum = d.getDate();
+              const label = getDayLabel(dateStr);
+              const isSelected = dateStr === selectedDate;
+              const isToday = dateStr === todayStr;
+              const isWeekend = label === "T7" || label === "CN";
+              const hasClasses = (scheduleByDate[dateStr] || []).length > 0;
+
+              return (
+                <TouchableOpacity
+                  key={dateStr}
+                  activeOpacity={0.7}
+                  onPress={() => setSelectedDate(dateStr)}
+                  style={[styles.dayCell, isSelected && styles.dayCellSelected]}
+                >
+                  <Text style={[
+                    styles.dayLabel,
+                    isSelected && styles.dayLabelSelected,
+                    isWeekend && !isSelected && { color: "#ffab91" },
+                  ]}>
+                    {label}
+                  </Text>
+                  <Text style={[
+                    styles.dayNumber,
+                    isSelected && styles.dayNumberSelected,
+                    isWeekend && !isSelected && { color: "#ffab91" },
+                    isToday && !isSelected && styles.dayNumberToday,
+                  ]}>
+                    {dayNum}
+                  </Text>
+                  {isToday && !isSelected && <View style={styles.todayDot} />}
+                  {!isSelected && hasClasses && !isToday && <View style={styles.classDot} />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* PHẦN DANH SÁCH LỚP HỌC BO GÓC TRÊN */}
+        <View style={styles.scrollContent}>
+          <Text style={styles.sectionDateTitle}>
+            {formatDateHeader(selectedDate)}
+          </Text>
+
+          {isLoading ? (
+            <View style={styles.loadingBox}>
+              <ActivityIndicator size="large" color="#0d47a1" />
+              <Text style={styles.loadingText}>Đang tải lịch...</Text>
+            </View>
+          ) : currentClasses.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <View style={styles.emptyIconCircle}>
+                <Clock color="#bbb" size={36} />
+              </View>
+              <Text style={styles.emptyTitle}>Không có lớp</Text>
+              <Text style={styles.emptySubtitle}>Bạn không có lớp nào trong ngày này</Text>
+            </View>
+          ) : (
+            <View style={styles.timelineContainer}>
+              {currentClasses.map((item: any) => (
+                <TimelineCard key={item.id} item={item} />
+              ))}
+            </View>
+          )}
+        </View>
+      </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
-  header: {
-    backgroundColor: "#0d47a1",
-    paddingBottom: 25,
-    borderBottomLeftRadius: 25,
-    borderBottomRightRadius: 25,
-    elevation: 5,
+  container: { flex: 1 }, 
+
+  // ═══ TOP BAR (Cố định, không lướt) ═══
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20, 
+    paddingTop: 10,
+    paddingBottom: 15, // Tạo một chút khoảng thoáng
+    backgroundColor: "transparent",
     zIndex: 10,
   },
-  topRow: {
+  backBtn: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "flex-start",
+  },
+  headerTitleContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: -1,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "white",
+  },
+  headerWeekNav: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 20,
-    marginTop: 10, // Thêm chút khoảng cách với SafeArea
-    paddingHorizontal: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    borderRadius: 20,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
   },
-  backBtn: { padding: 5 },
-  headerTitle: { fontSize: 22, fontWeight: "bold", color: "white" },
-  weekPicker: {
-    backgroundColor: "rgba(255,255,255,0.2)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
+  headerArrowBtn: {
+    padding: 2,
   },
-  weekText: { color: "white", fontWeight: "600" },
+  headerWeekText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 12,
+    paddingHorizontal: 4,
+  },
 
-  dayTabsContainer: {
-    paddingHorizontal: 15,
-    gap: 10,
+  // ═══ SCROLL AREA ═══
+  scrollViewBg: {
+    backgroundColor: "transparent", // Đảm bảo kéo pull-to-refresh không bị lộ viền
   },
-  dayTab: {
-    width: 50,
-    height: 50,
-    borderRadius: 15,
+  scrollContentContainer: {
+    flexGrow: 1, 
+  },
+
+  // ═══ DATE STRIP (Phần này sẽ lướt trôi theo) ═══
+  dateStripWrapper: {
+    backgroundColor: "transparent",
+    paddingBottom: 25, 
+    paddingTop: 5,
+  },
+  dateStrip: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingHorizontal: 12,
+  },
+  dayCell: {
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.15)",
+    width: 44,
+    height: 64,
+    borderRadius: 22,
   },
-  dayTabActive: {
+  dayCellSelected: {
     backgroundColor: "white",
-    elevation: 4,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  dayTabText: { color: "#bbdefb", fontWeight: "bold", fontSize: 15 },
-  dayTabTextActive: { color: "#0d47a1", fontSize: 16 },
-
-  scrollContent: {
-    padding: 20,
-    paddingTop: 20,
-  },
-  dayIndicator: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 15,
-    fontWeight: "500",
-    fontStyle: "italic",
-  },
-  card: {
-    backgroundColor: "white",
-    borderRadius: 15,
-    padding: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 15,
-    borderLeftWidth: 5,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  cardInfo: { flex: 1 },
-  cardTitle: { fontSize: 17, fontWeight: "bold", color: "#333" },
-  cardSub: { fontSize: 13, color: "#666", marginVertical: 4 },
-  timeBadge: {
-    backgroundColor: "#e3f2fd",
-    alignSelf: "flex-start",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginTop: 4,
+  dayLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.6)",
+    marginBottom: 3,
   },
-  timeText: { fontSize: 11, color: "#0d47a1", fontWeight: "bold" },
-  statusBadge: {
-    flexDirection: "row",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
+  dayLabelSelected: {
+    color: "#0d47a1",
+  },
+  dayNumber: {
+    fontSize: 17,
+    fontWeight: "bold",
+    color: "white",
+  },
+  dayNumberSelected: {
+    color: "#0d47a1",
+  },
+  dayNumberToday: {
+    color: "#fff",
+  },
+  todayDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: "#FFD700",
+    marginTop: 3,
+  },
+  classDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(255,255,255,0.5)",
+    marginTop: 3,
+  },
+
+  // ═══ THÂN TRANG (Cuộn cùng Date Strip) ═══
+  scrollContent: {
+    flexGrow: 1, // Để khối này chiếm toàn bộ khoảng trống còn lại
+    padding: 20,
+    paddingTop: 25,
+    paddingBottom: 80, // Cách đáy nhiều hơn để lúc cuộn không bị kích
+    backgroundColor: "#F8F9FA",
+    borderTopLeftRadius: 25,    
+    borderTopRightRadius: 25,   
+  },
+  
+  sectionDateTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#6b7280",
+    letterSpacing: 0.5,
+    marginBottom: 16,
+    textTransform: "uppercase",
+  },
+  loadingBox: {
+    padding: 50,
     alignItems: "center",
-    marginLeft: 10,
   },
-  bgBlue: { backgroundColor: "#2e7d32" },
-  bgRed: { backgroundColor: "#ef5350" },
-  statusText: { color: "white", fontSize: 11, fontWeight: "600" },
+  loadingText: {
+    marginTop: 15,
+    color: "#888",
+    fontWeight: "500",
+  },
+  emptyContainer: {
+    padding: 50,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: "bold",
+    color: "#555",
+    marginBottom: 6,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: "#999",
+  },
+  timelineContainer: {
+    paddingBottom: 20,
+  },
 });

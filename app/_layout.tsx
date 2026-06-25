@@ -1,4 +1,3 @@
-import { initDatabase } from "@/db";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   DarkTheme,
@@ -9,6 +8,8 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
+import { ErrorProvider } from "@/src/context/ErrorContext";
+import Toast from "react-native-toast-message";
 
 export const unstable_settings = {
   // Đảm bảo khi có lỗi hoặc reload, nó biết quay về (tabs) nếu đã vào trong
@@ -18,17 +19,10 @@ export const unstable_settings = {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
-  // Khi app khởi động,gọi hàm initDatabase để tạo bảng nếu chưa có
-  useEffect(() => {
-    try {
-      initDatabase();
-      console.log("✅ Database đã được khởi tạo hoặc đã tồn tại.");
-    } catch (error) {
-      console.error("❌ Lỗi khi khởi tạo database:", error);
-    }
-  }, []);
+
 
   return (
+  <ErrorProvider>
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
         {/* 1. Màn hình Đăng nhập (app/index.tsx) */}
@@ -61,6 +55,8 @@ export default function RootLayout() {
         />
       </Stack>
       <StatusBar style="auto" />
+      <Toast />
     </ThemeProvider>
+  </ErrorProvider>
   );
 }

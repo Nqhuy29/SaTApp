@@ -11,8 +11,17 @@ export default function Index() {
     const checkToken = async () => {
       const accessToken = await tokenStorage.getAccessToken();
       const refreshToken = await tokenStorage.getRefreshToken();
-      // Còn ít nhất refreshToken → coi như đã đăng nhập (api.ts sẽ tự refresh)
-      setIsLoggedIn(!!refreshToken);
+
+      // Phải có refreshToken VÀ accessToken phải là role STUDENT
+      if (refreshToken && accessToken && tokenStorage.isStudentToken(accessToken)) {
+        setIsLoggedIn(true);
+      } else if (refreshToken || accessToken) {
+        // Có token nhưng không phải student → xóa và đá về login
+        await tokenStorage.clearTokens();
+        setIsLoggedIn(false);
+      } else {
+        setIsLoggedIn(false);
+      }
       setIsLoading(false);
     };
     checkToken();

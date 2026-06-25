@@ -19,14 +19,13 @@
     "android": {
       "package": "com.huykien.satapp",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/images/student-attendance-logo.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
+        "android.permission.CAMERA",
         "android.permission.CAMERA"
       ]
     },
@@ -55,8 +54,7 @@
           "iosUrlScheme": "com.googleusercontent.apps.473893712570-g0s90ng5qtq93rtnsorodeerkiil5qq9"
         }
       ],
-      "expo-secure-store",
-      "expo-sqlite"
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -64,10 +62,18 @@
     },
     "extra": {
       "router": {},
+      "apiBaseUrl": "https://efficient-magnifier-irritable.ngrok-free.dev", 
+      // "apiBaseUrl": "https://backend-satapp.onrender.com", 
       "eas": {
         "projectId": "b68b7833-e9e7-4507-beef-f81c5f8ebe47"
       }
     },
-    "owner": "kienvanbau"
+    "owner": "kienvanbau",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/b68b7833-e9e7-4507-beef-f81c5f8ebe47"
+    }
   }
 }
